@@ -16,17 +16,21 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
+@RequestMapping("/jpa")
 public class UserJpaController {
 
     @Autowired
     private UserRepository userRepository;
 
-    @GetMapping("/jpa/users")
+    @Autowired
+    private PostRepository postRepository;
+
+    @GetMapping("/users")
     public List<User> retrieveAllUsers(){
         return userRepository.findAll();
     }
 
-    @GetMapping("/jpa/users/{id}")
+    @GetMapping("/users/{id}")
     public EntityModel<User> retrieveUser(@PathVariable int id){
         Optional<User> user = userRepository.findById(id);
 
@@ -44,12 +48,12 @@ public class UserJpaController {
 
     }
 
-    @DeleteMapping("/jpa/users/{id}")
+    @DeleteMapping("/users/{id}")
     public void deleteUser(@PathVariable int id){
         userRepository.deleteById(id);
     }
 
-    @PostMapping("/jpa/users")
+    @PostMapping("/users")
     public ResponseEntity<User> createUsr(@Valid @RequestBody User user){
 
         User savedUser = userRepository.save(user);
@@ -58,6 +62,38 @@ public class UserJpaController {
                     .path("{id}")
                     .buildAndExpand(savedUser.getId())
                     .toUri();
+        return ResponseEntity.created(location).build();
+    }
+
+
+    @GetMapping("/users/{id}/posts")
+    public List<Post> retrieveAllPostsByUser(@PathVariable int id){
+        Optional<User> user = userRepository.findById(id);
+
+        if(!user.isPresent()){
+            throw new UserNotFoundException(String.format("ID[%s] not found", id));
+        }
+
+        return user.get().getPosts();
+    }
+
+
+    @PostMapping("/users/{id}/posts")
+    public ResponseEntity<Post> createPost(@PathVariable int id, @RequestBody Post post){
+
+        Optional<User> user = userRepository.findById(id);
+
+        if(!user.isPresent()){
+            throw new UserNotFoundException(String.format("ID[%s] not found", id));
+        }
+
+        post.setUser(user.get());
+        Post savedPost = postRepository.save(post);
+
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("{id}")
+                .buildAndExpand(savedPost.getId())
+                .toUri();
         return ResponseEntity.created(location).build();
     }
 }

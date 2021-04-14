@@ -10,9 +10,11 @@ import lombok.NoArgsConstructor;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
 import javax.validation.constraints.Past;
 import javax.validation.constraints.Size;
 import java.util.Date;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -35,6 +37,17 @@ public class User {
    // @JsonIgnore
     private String password;
 
-   // @JsonIgnore
+    public User(Integer id, String name, Date joinDate, String password, String ssn) {
+        this.id = id;
+        this.name = name;
+        JoinDate = joinDate;
+        this.password = password;
+        this.ssn = ssn;
+    }
+
+    // @JsonIgnore
     private String ssn;
+
+    @OneToMany(mappedBy = "user")
+    private List<Post> posts;
 }
